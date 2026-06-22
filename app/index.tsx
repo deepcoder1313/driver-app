@@ -1,9 +1,14 @@
+// app/index.tsx  ─ Driver Login
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-
 import {
+  ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -11,146 +16,244 @@ import {
   View,
 } from "react-native";
 import API from "../services/api";
+import { C, S } from "../theme";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [email,      setEmail]      = useState("");
+  const [password,   setPassword]   = useState("");
+  const [showPass,   setShowPass]   = useState(false);
+  const [loading,    setLoading]    = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  
-useEffect(() => {
-  checkLogin();
-}, []);
+  useEffect(() => { checkLogin(); }, []);
 
-const checkLogin = async () => {
-  try {
-    const token = await AsyncStorage.getItem("token");
+  const checkLogin = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (token) router.replace("/dashboard");
+      else setLoading(false);
+    } catch { setLoading(false); }
+  };
 
-    if (token) {
-      router.replace("/dashboard");
-    } else {
-      setLoading(false);
+  const login = async () => {
+    if (!email || !password) {
+      Alert.alert("Missing fields", "Please enter your email and password.");
+      return;
     }
-  } catch (error) {
-    console.log(error);
-    setLoading(false);
+    setSubmitting(true);
+    try {
+      const res = await API.post("/drivers/login", { email, password });
+      await AsyncStorage.setItem("driver", JSON.stringify(res.data.driver));
+      await AsyncStorage.setItem("token",  res.data.token);
+      router.replace("/dashboard");
+    } catch {
+      Alert.alert("Login Failed", "Invalid email or password.");
+    } finally { setSubmitting(false); }
+  };
+
+  // ─── Splash / checking token ────────────────────────────
+  if (loading) {
+    return (
+      <View style={styles.splash}>
+        <StatusBar barStyle="light-content" backgroundColor={C.bgDark} />
+        <View style={styles.logoBox}>
+          <Text style={styles.logoEmoji}>🚌</Text>
+        </View>
+        <Text style={styles.splashTitle}>BusTracker</Text>
+        <Text style={styles.splashSub}>Driver App</Text>
+        <ActivityIndicator color={C.primary2} style={{ marginTop: 40 }} size="large" />
+      </View>
+    );
   }
-};
- const login = async () => {
-  console.log("Login button clicked");
 
-  if (!email || !password) {
-    Alert.alert("Error", "Please fill all fields");
-    return;
-  }
-
-  console.log("Sending request...");
-
-  try {
-    const res = await API.post("/drivers/login", {
-      email,
-      password,
-      
-    });
-
-
-    console.log(res.data);
-    console.log("Response:", res.data);
-
-    Alert.alert("Success", "Login Successful");
-    await AsyncStorage.setItem(
-  "driver",
-  JSON.stringify(res.data.driver)
-);
-await AsyncStorage.setItem(
-  "token",
-  res.data.token
-);
-
-router.replace("/dashboard");
-
-    
-  } catch (error) {
-    console.log("Login Error:", error);
-
-    Alert.alert("Login Failed", "Invalid credentials");
-  }
-};
-
-if (loading) {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Text>Loading...</Text>
-    </View>
-  );
-}
- 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Driver Login</Text>
+      <StatusBar barStyle="light-content" backgroundColor={C.bgDark} />
 
-      <TextInput
-        placeholder="Email"
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-      />
+      <ScrollView
+        style={{ flex: 1, backgroundColor: C.bgLight }}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Dark header hero ───────────────────────────── */}
+        <View style={styles.hero}>
+          {/* Decorative circles */}
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
 
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-      />
+          <View style={styles.logoBox}>
+            <Text style={styles.logoEmoji}>🚌</Text>
+          </View>
+          <Text style={styles.heroTitle}>BusTracker</Text>
+          <Text style={styles.heroSub}>DRIVER PORTAL</Text>
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={login}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-    </View>
+        {/* ── Login card ─────────────────────────────────── */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Welcome back</Text>
+          <Text style={styles.cardSub}>Sign in to your driver account</Text>
+
+          {/* Email */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>EMAIL ADDRESS</Text>
+            <View style={styles.inputRow}>
+              <Text style={styles.inputIcon}>✉️</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="driver@example.com"
+                placeholderTextColor={C.textMuted}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          {/* Password */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>PASSWORD</Text>
+            <View style={styles.inputRow}>
+              <Text style={styles.inputIcon}>🔒</Text>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="••••••••"
+                placeholderTextColor={C.textMuted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPass}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPass(!showPass)}
+                style={styles.eyeBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={{ fontSize: 16 }}>{showPass ? "🙈" : "👁️"}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Submit */}
+          <TouchableOpacity
+            style={[styles.submitBtn, submitting && { opacity: 0.7 }]}
+            onPress={login}
+            disabled={submitting}
+            activeOpacity={0.85}
+          >
+            {submitting
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.submitText}>Sign In  →</Text>
+            }
+          </TouchableOpacity>
+
+          {/* Helper */}
+          <View style={styles.helperRow}>
+            <View style={styles.helperDot} />
+            <Text style={styles.helperText}>
+              Contact your admin if you can't sign in
+            </Text>
+          </View>
+        </View>
+
+        {/* ── Footer ─────────────────────────────────────── */}
+        <Text style={styles.footer}>BusTracker Admin System · v1.0</Text>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#ffffff",
+  // Splash
+  splash: {
+    flex: 1, backgroundColor: C.bgDark,
+    alignItems: "center", justifyContent: "center",
+  },
+  splashTitle: { color: C.textOnDark, fontSize: 28, fontWeight: "800", marginTop: 14, letterSpacing: -0.5 },
+  splashSub:   { color: C.textMuted, fontSize: 13, marginTop: 4, letterSpacing: 2, textTransform: "uppercase" },
+
+  // Hero
+  hero: {
+    backgroundColor: C.bgDark,
+    paddingTop: 72, paddingBottom: 56,
+    alignItems: "center",
+    borderBottomLeftRadius: 32, borderBottomRightRadius: 32,
+    overflow: "hidden",
+    position: "relative",
+  },
+  circle1: {
+    position: "absolute", width: 220, height: 220, borderRadius: 110,
+    backgroundColor: C.primary, opacity: 0.08,
+    top: -60, right: -50,
+  },
+  circle2: {
+    position: "absolute", width: 160, height: 160, borderRadius: 80,
+    backgroundColor: C.primary2, opacity: 0.07,
+    bottom: -40, left: -30,
   },
 
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    marginBottom: 30,
-    textAlign: "center",
+  logoBox: {
+    width: 64, height: 64, borderRadius: 18,
+    backgroundColor: C.primary,
+    alignItems: "center", justifyContent: "center",
+    marginBottom: 14,
+    shadowColor: C.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45, shadowRadius: 16, elevation: 8,
+  },
+  logoEmoji: { fontSize: 30 },
+  heroTitle: { color: C.textOnDark, fontSize: 26, fontWeight: "800", letterSpacing: -0.4 },
+  heroSub:   {
+    color: C.textMuted, fontSize: 11, fontWeight: "600",
+    letterSpacing: 2.5, textTransform: "uppercase", marginTop: 5,
   },
 
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 15,
+  // Card
+  card: {
+    backgroundColor: C.bgCard,
+    marginHorizontal: 20, marginTop: -24,
+    borderRadius: 20, padding: 26,
+    ...S.shadowMd,
+    marginBottom: 20,
   },
+  cardTitle: { fontSize: 20, fontWeight: "800", color: C.textPrimary, letterSpacing: -0.3 },
+  cardSub:   { fontSize: 13, color: C.textSub, marginTop: 3, marginBottom: 24 },
 
-  button: {
-    backgroundColor: "#2563eb",
-    padding: 15,
-    borderRadius: 10,
+  // Fields
+  fieldGroup: { marginBottom: 16 },
+  label: {
+    fontSize: 10, fontWeight: "700", color: C.textMuted,
+    letterSpacing: 1, marginBottom: 7,
   },
+  inputRow: {
+    flexDirection: "row", alignItems: "center",
+    borderWidth: 1.5, borderColor: C.border,
+    borderRadius: S.radiusMd, backgroundColor: "#F8FAFC",
+    paddingHorizontal: 14, paddingVertical: 2,
+  },
+  inputIcon:  { fontSize: 16, marginRight: 10, opacity: 0.6 },
+  input:      { flex: 1, fontSize: 14, color: C.textPrimary, paddingVertical: 12 },
+  eyeBtn:     { padding: 4 },
 
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
-    fontSize: 18,
+  // Button
+  submitBtn: {
+    backgroundColor: C.primary,
+    borderRadius: S.radiusMd, paddingVertical: 15,
+    alignItems: "center", marginTop: 8,
+    shadowColor: C.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.38, shadowRadius: 12, elevation: 5,
   },
+  submitText: { color: "#fff", fontSize: 16, fontWeight: "700", letterSpacing: 0.2 },
+
+  // Helper
+  helperRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 20 },
+  helperDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.success, marginRight: 8 },
+  helperText:{ fontSize: 12, color: C.textSub },
+
+  footer: { textAlign: "center", color: C.textMuted, fontSize: 11, paddingBottom: 30 },
 });
-
