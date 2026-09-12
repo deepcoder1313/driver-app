@@ -35,21 +35,76 @@ export default function LoginScreen() {
     } catch { setLoading(false); }
   };
 
-  const login = async () => {
-    if (!email || !password) {
-      Alert.alert("Missing fields", "Please enter your email and password.");
+const login = async () => {
+  if (!email || !password) {
+    Alert.alert("Missing fields", "Please enter your email and password.");
+    return;
+  }
+
+  setSubmitting(true);
+
+  try {
+    const res = await API.post("/drivers/login", {
+      email,
+      password,
+    });
+
+    const token = res.data.token;
+
+    if (!token) {
+      console.log("❌ No JWT received from backend");
+      Alert.alert("Login Failed", "Server did not return a token.");
       return;
     }
-    setSubmitting(true);
-    try {
-      const res = await API.post("/drivers/login", { email, password });
-      await AsyncStorage.setItem("driver", JSON.stringify(res.data.driver));
-      await AsyncStorage.setItem("token",  res.data.token);
-      router.replace("/dashboard");
-    } catch {
-      Alert.alert("Login Failed", "Invalid email or password.");
-    } finally { setSubmitting(false); }
-  };
+
+    await AsyncStorage.setItem("driverToken", token);
+    await AsyncStorage.setItem(
+      "driver",
+      JSON.stringify(res.data.driver)
+    );
+    await AsyncStorage.setItem("token", token);
+    await AsyncStorage.setItem("bg_token", token);
+
+
+    console.log("✅ DRIVER JWT SAVED");
+    console.log("🔐 LOGIN TOKEN SAVED:", {
+  driverToken: !!(await AsyncStorage.getItem("driverToken")),
+  token: !!(await AsyncStorage.getItem("token")),
+  bg_token: !!(await AsyncStorage.getItem("bg_token")),
+});
+
+    // Verify immediately
+    const savedToken = await AsyncStorage.getItem("driverToken");
+
+    if (savedToken) {
+      console.log("✅ DRIVER JWT VERIFIED IN STORAGE");
+    } else {
+      console.log("❌ DRIVER JWT COULD NOT BE READ");
+    }
+
+    router.replace("/dashboard");
+
+  } catch (err: any) {
+    console.log("Login Error:", err);
+
+    if (err.response) {
+      console.log("Status:", err.response.status);
+      console.log("Data:", err.response.data);
+    } else if (err.request) {
+      console.log("No response received");
+    } else {
+      console.log("Message:", err.message);
+    }
+
+    Alert.alert(
+      "Login Failed",
+      err.message?.toString() ?? "Unknown error"
+    );
+
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   // ─── Splash / checking token ────────────────────────────
   if (loading) {

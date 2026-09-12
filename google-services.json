@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "444326197441",
+    "project_id": "bus-trackking-system",
+    "storage_bucket": "bus-trackking-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:444326197441:android:76d52fc04e5812a675bc40",
+        "android_client_info": {
+          "package_name": "com.sandeep.parentapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_NdTTVDUPpdYH8PK9fSI_n6dFh-us7i4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:444326197441:android:70fe25890ad13a1e75bc40",
+        "android_client_info": {
+          "package_name": "com.sandeep_1313.DriverApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_NdTTVDUPpdYH8PK9fSI_n6dFh-us7i4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

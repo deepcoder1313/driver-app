@@ -7,9 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "driverapp",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -18,11 +15,20 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ],
+      "package": "com.sandeep_1313.DriverApp",
+      "googleServicesFile": "./google-services.json",
       "config": {
-  "googleMaps": {
-    "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
-  }
-}
+        "googleMaps": {
+          "apiKey": "AIzaSyAfDRRyVLHKE4Ewz0B3y3wtk0ful4wD02w"
+        }
+      }
     },
     "web": {
       "output": "static",
@@ -42,8 +48,14 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "54dc248d-c2c2-424a-8579-2fc3a5b51d5e"
+      }
     }
   }
 }
+

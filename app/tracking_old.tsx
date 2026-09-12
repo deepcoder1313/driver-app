@@ -61,6 +61,7 @@ if (driverData) {
     "currentTripId",
     tripRes.data._id
   );
+  
 }
    console.log("🚀 Start Tracking button clicked");
 
